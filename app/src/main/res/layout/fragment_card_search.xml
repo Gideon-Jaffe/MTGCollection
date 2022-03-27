@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".ui.card_search.CardSearchFragment">
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/cardNameLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+        <AutoCompleteTextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/card_search_hint"
+            android:id="@+id/cardNameTextBox"
+            android:inputType="text"
+            android:imeOptions="actionSearch"/>
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <View
+        android:id="@+id/line"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_margin="5dp"
+        android:background="#C6C6C6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cardNameLayout" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/RecyclerViewChosen"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clickable="true"
+        app:layout_constraintTop_toBottomOf="@+id/line"
+        app:layout_constraintBottom_toTopOf="@+id/Search_button"
+        android:focusable="true" />
+
+    <Button
+        android:id="@+id/Search_button"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_margin="10dp"
+        android:text="@string/card_search_button_string"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
