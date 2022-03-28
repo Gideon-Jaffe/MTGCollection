@@ -92,6 +92,7 @@ class CardSearchFragment : Fragment() {
                 val current = cards.getJSONObject(i)
                 cardArrayList.add(
                     MTGCardInfo(
+                        current.getString("id"),
                         current.getString("name"),
                         current.getString("set"),
                         current.getString("rarity"),

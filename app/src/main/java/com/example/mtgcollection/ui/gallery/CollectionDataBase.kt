@@ -13,6 +13,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
 
     override fun onCreate(db: SQLiteDatabase?) {
         val createTableStatement = "CREATE TABLE $COLLECTION_TABLE (" +
+                "$COLUMN_ID TEXT, " +
                 "$COLUMN_CARD_NAME TEXT, " +
                 "$COLUMN_CARD_SET TEXT, " +
                 "$COLUMN_IS_FOIL INTEGER, " +
@@ -25,7 +26,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
                 "$COLUMN_TIX REAL, " +
                 "$COLUMN_TIX_FOIL REAL, " +
                 "$COLUMN_PRICE_LAST_UPDATED TEXT, " +
-                "PRIMARY KEY ($COLUMN_CARD_NAME, $COLUMN_CARD_SET, $COLUMN_IS_FOIL))"
+                "PRIMARY KEY ($COLUMN_ID, $COLUMN_IS_FOIL))"
 
         db?.execSQL(createTableStatement)
 
@@ -43,6 +44,10 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         super.close()
     }
 
+    fun dropTable() {
+        sqLiteDatabase.execSQL("DROP TABLE $COLLECTION_TABLE")
+    }
+
     fun addOne(card_info : MTGCardInfo) : Boolean
     {
         if (getOne(card_info) != null) {
@@ -50,6 +55,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         } else {
             val contentValues = ContentValues()
 
+            contentValues.put(COLUMN_ID, card_info.id)
             contentValues.put(COLUMN_CARD_NAME, card_info.card_name)
             contentValues.put(COLUMN_CARD_SET, card_info.set)
             contentValues.put(COLUMN_IS_FOIL, card_info.isFoil)
@@ -96,8 +102,8 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         contentValues.put(COLUMN_PRICE_LAST_UPDATED, java.util.Calendar.getInstance().time.toString())
 
         val update = sqLiteDatabase.update(
-            COLLECTION_TABLE, contentValues, "$COLUMN_CARD_NAME=? AND $COLUMN_CARD_SET=? AND $COLUMN_IS_FOIL=?",
-            arrayOf(card_info.card_name, card_info.set, if (card_info.isFoil) "1" else "0"))
+        COLLECTION_TABLE, contentValues, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=?",
+            arrayOf(card_info.id, if (card_info.isFoil) "1" else "0"))
 
         return update == 1
     }
@@ -152,6 +158,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
 
     companion object {
         const val COLLECTION_TABLE = "CARD_COLLECTION"
+        const val COLUMN_ID = "SCRYFALL_ID"
         const val COLUMN_CARD_NAME = "CARD_NAME"
         const val COLUMN_CARD_SET = "CARD_SET"
         const val COLUMN_IS_FOIL = "IS_FOIL"
@@ -171,19 +178,20 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         fun cursorToCardInfo(cursor: Cursor) : MTGCardInfo? {
             if (cursor.count == 0) return null
 
-            val cardInfo = MTGCardInfo("", "", "", 0, Prices())
+            val cardInfo = MTGCardInfo("", "", "", "", 0, Prices())
 
-            cardInfo.card_name = cursor.getString(0)
-            cardInfo.set = cursor.getString(1)
-            cardInfo.isFoil = cursor.getInt(2) == 1
-            cardInfo.rarity = cursor.getString(3)
-            cardInfo.amount = cursor.getInt(4)
-            cardInfo.prices.usd = cursorColumnToString(cursor, 5)
-            cardInfo.prices.usd_foil = cursorColumnToString(cursor, 6)
-            cardInfo.prices.eur = cursorColumnToString(cursor, 7)
-            cardInfo.prices.eur_foil = cursorColumnToString(cursor, 8)
-            cardInfo.prices.tix = cursorColumnToString(cursor, 9)
-            cardInfo.prices.tix_foil = cursorColumnToString(cursor, 10)
+            cardInfo.id = cursor.getString(0)
+            cardInfo.card_name = cursor.getString(1)
+            cardInfo.set = cursor.getString(2)
+            cardInfo.isFoil = cursor.getInt(3) == 1
+            cardInfo.rarity = cursor.getString(4)
+            cardInfo.amount = cursor.getInt(5)
+            cardInfo.prices.usd = cursorColumnToString(cursor, 6)
+            cardInfo.prices.usd_foil = cursorColumnToString(cursor, 7)
+            cardInfo.prices.eur = cursorColumnToString(cursor, 8)
+            cardInfo.prices.eur_foil = cursorColumnToString(cursor, 9)
+            cardInfo.prices.tix = cursorColumnToString(cursor, 10)
+            cardInfo.prices.tix_foil = cursorColumnToString(cursor, 11)
 
             return cardInfo
         }

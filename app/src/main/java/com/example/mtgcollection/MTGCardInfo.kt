@@ -6,7 +6,7 @@ import androidx.core.content.res.ResourcesCompat
 import org.json.JSONObject
 import java.lang.Exception
 
-data class MTGCardInfo(var card_name : String, var set : String, var rarity : String, var amount : Int, var prices : Prices, var isFoil : Boolean = false) {
+data class MTGCardInfo(var id : String, var card_name : String, var set : String, var rarity : String, var amount : Int, var prices : Prices, var isFoil : Boolean = false) {
 
     fun getPriceString() : String {
         return "USD: ${prices.usd}\nEUR: ${prices.eur}\nTIX: ${prices.tix}"
