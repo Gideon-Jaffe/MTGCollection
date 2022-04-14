@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.MTGCardInfo
 import com.example.mtgcollection.Prices
 
@@ -18,7 +19,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
                 "$COLUMN_CARD_SET TEXT, " +
                 "$COLUMN_IS_FOIL INTEGER, " +
                 "$COLUMN_RARITY CHAR, " +
-                "$COLUMN_AMOUNT CHAR, " +
+                "$COLUMN_AMOUNT INTEGER, " +
                 "$COLUMN_USD REAL, " +
                 "$COLUMN_USD_FOIL REAL, " +
                 "$COLUMN_EUR REAL, " +
@@ -28,11 +29,22 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
                 "$COLUMN_PRICE_LAST_UPDATED TEXT, " +
                 "PRIMARY KEY ($COLUMN_ID, $COLUMN_IS_FOIL))"
 
-        db?.execSQL(createTableStatement)
+        val createLocationStatement = "CREATE TABLE $LOCATION_TABLE (" +
+                "$COLUMN_LOCATION_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "$COLUMN_LOCATION_NAME TEXT, " +
+                "$COLUMN_LOW_PRICE REAL, " +
+                "$COLUMN_HIGH_PRICE REAL)"
 
-        /*val createLocationTableStatement = "CREATE TABLE $LOCATION_TABLE (" +
-                "$COLUMN_CARD_NAME TEXT, " +
-                "$COLUMN_CARD_SET TEXT, "*/
+        val createCardInLocationTableStatement = "CREATE TABLE $CARD_IN_LOCATION_TABLE (" +
+                "$COLUMN_ID TEXT, " +
+                "$COLUMN_IS_FOIL TEXT, " +
+                "$COLUMN_LOCATION_ID INTEGER, " +
+                "$COLUMN_AMOUNT INTEGER, " +
+                "PRIMARY KEY ($COLUMN_ID, $COLUMN_IS_FOIL, $COLUMN_LOCATION_ID))"
+
+        db?.execSQL(createTableStatement)
+        db?.execSQL(createLocationStatement)
+        db?.execSQL(createCardInLocationTableStatement)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
@@ -72,6 +84,17 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             val insert = sqLiteDatabase.insert(COLLECTION_TABLE, null, contentValues)
             return -1L != insert
         }
+    }
+
+    fun addLocation(location : LocationInfo) : Boolean {
+        val contentValues = ContentValues()
+
+        contentValues.put(COLUMN_LOCATION_NAME, location.locationName)
+        contentValues.put(COLUMN_LOW_PRICE, location.lowPrice)
+        contentValues.put(COLUMN_HIGH_PRICE, location.highPrice)
+
+        val insert = sqLiteDatabase.insert(LOCATION_TABLE, null, contentValues)
+        return -1L != insert
     }
 
     fun updateAmount(card_info: MTGCardInfo, add : Boolean = false) : Boolean {
@@ -124,7 +147,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         }
     }
 
-    fun getAll() : ArrayList<MTGCardInfo> {
+    fun getAllCards() : ArrayList<MTGCardInfo> {
         val returnList = ArrayList<MTGCardInfo>()
 
         val queryString = "SELECT * FROM $COLLECTION_TABLE"
@@ -136,6 +159,24 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             do {
                 cardInfo = cursorToCardInfo(cursor)!!
                 returnList.add(cardInfo)
+            }while (cursor.moveToNext())
+        }
+        cursor.close()
+        return returnList
+    }
+
+    fun getAllBoxes() : ArrayList<LocationInfo> {
+        val returnList = ArrayList<LocationInfo>()
+
+        val queryString = "SELECT * FROM $LOCATION_TABLE"
+
+        val cursor = sqLiteDatabase.rawQuery(queryString, null)
+
+        if (cursor.moveToFirst()) {
+            var locationInfo : LocationInfo
+            do {
+                locationInfo = cursorToLocationInfo(cursor)!!
+                returnList.add(locationInfo)
             }while (cursor.moveToNext())
         }
         cursor.close()
@@ -172,8 +213,12 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         const val COLUMN_TIX_FOIL = "PRICE_TIX_FOIL"
         const val COLUMN_PRICE_LAST_UPDATED = "PRICES_LAST_UPDATED"
 
-        const val LOCATION_TABLE = "CARD_LOCATIONS"
-        const val COLUMN_LOCATION = "LOCATION"
+        const val CARD_IN_LOCATION_TABLE = "CARD_LOCATIONS"
+        const val LOCATION_TABLE = "LOCATIONS_TABLE"
+        const val COLUMN_LOCATION_ID = "LOCATION_ID"
+        const val COLUMN_LOCATION_NAME = "LOCATION"
+        const val COLUMN_LOW_PRICE = "LOWEST_PRICE"
+        const val COLUMN_HIGH_PRICE = "HIGHEST_PRICE"
 
         fun cursorToCardInfo(cursor: Cursor) : MTGCardInfo? {
             if (cursor.count == 0) return null
@@ -194,6 +239,19 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             cardInfo.prices.tix_foil = cursorColumnToString(cursor, 11)
 
             return cardInfo
+        }
+
+        fun cursorToLocationInfo(cursor: Cursor) : LocationInfo? {
+            if (cursor.count == 0) return null
+
+            val locationInfo = LocationInfo(0, "", null, null)
+
+            locationInfo.locationId = cursor.getInt(0)
+            locationInfo.locationName = cursor.getString(1)
+            locationInfo.lowPrice = cursor.getFloat(2)
+            locationInfo.highPrice = cursor.getFloat(3)
+
+            return locationInfo
         }
 
         fun cardGroup(cardPrice: String): Pair<Int, String> {

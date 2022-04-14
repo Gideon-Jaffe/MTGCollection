@@ -16,5 +16,10 @@
             android:id="@+id/nav_notifications"
             android:icon="@drawable/ic_menu_slideshow"
             android:title="@string/menu_notifications" />
+
+        <item
+            android:id="@+id/nav_boxes"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="@string/menu_boxes" />
     </group>
 </menu>

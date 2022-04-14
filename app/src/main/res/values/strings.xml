@@ -13,4 +13,6 @@
     <string name="card_search_hint">Card Name</string>
     <string name="card_search_set_hint">Card Set</string>
     <string name="card_search_button_string">Search</string>
+    <string name="Boxes_Add_Button_String">add</string>
+    <string name="menu_boxes">Boxes</string>
 </resources>

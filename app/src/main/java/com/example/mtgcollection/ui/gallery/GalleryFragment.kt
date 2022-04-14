@@ -60,7 +60,7 @@ class GalleryFragment : Fragment() {
     }
 
     private fun getUserData() {
-        newRecyclerview.adapter = CollectionRecyclerViewAdapter(this.context, collectionDBHelper.getAll()) { card, pos -> onCollectionListItemClick(card, pos)}
+        newRecyclerview.adapter = CollectionRecyclerViewAdapter(this.context, collectionDBHelper.getAllCards()) { card, pos -> onCollectionListItemClick(card, pos)}
     }
 
     private fun onCollectionListItemClick(cardInfo: MTGCardInfo, position : Int) {

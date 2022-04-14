@@ -22,4 +22,10 @@
         android:name="com.example.mtgcollection.ui.slideshow.NotificationsFragment"
         android:label="@string/menu_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/nav_boxes"
+        android:name="com.example.mtgcollection.ui.boxes.BoxesFragment"
+        android:label="@string/menu_boxes"
+        tools:layout="@layout/fragment_boxes" />
 </navigation>
