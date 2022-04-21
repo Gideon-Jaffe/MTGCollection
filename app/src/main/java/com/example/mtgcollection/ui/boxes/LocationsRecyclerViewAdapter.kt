@@ -4,12 +4,14 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.R
 
-class LocationsRecyclerViewAdapter(private val context : Context?, private val locationsInfoList : ArrayList<LocationInfo>, private val onItemClicked: (locationClicked: LocationInfo, position : Int) -> Unit) :
+class LocationsRecyclerViewAdapter(private val context : Context?, private val locationsInfoList : ArrayList<LocationInfo>,
+    private val onTrashClicked : (Int) -> Unit, private val onItemClicked: (locationClicked: LocationInfo, position : Int) -> Unit) :
     RecyclerView.Adapter<LocationsRecyclerViewAdapter.MyViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
@@ -28,6 +30,8 @@ class LocationsRecyclerViewAdapter(private val context : Context?, private val l
         if (currentItem.highPrice != null) {
             holder.highPrice.text = "To ${currentItem.highPrice.toString()}"
         }
+
+        holder.trashButton.setOnClickListener { onTrashClicked(currentItem.locationId!!) }
     }
 
     private fun addItem(location : LocationInfo) {
@@ -56,7 +60,7 @@ class LocationsRecyclerViewAdapter(private val context : Context?, private val l
         val locationName : TextView = itemView.findViewById(R.id.location_name)
         val lowPrice : TextView = itemView.findViewById(R.id.location_low_price)
         val highPrice : TextView = itemView.findViewById(R.id.location_high_price)
-
+        val trashButton : ImageButton = itemView.findViewById(R.id.location_trash_button)
 
         init {
             itemView.setOnClickListener(this)

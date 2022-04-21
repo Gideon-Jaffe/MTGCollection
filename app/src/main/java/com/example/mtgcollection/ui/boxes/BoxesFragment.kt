@@ -57,7 +57,7 @@ class BoxesFragment : Fragment() {
 
     private fun getBoxesData() {
         val items = boxesDBHelper.getAllBoxes()
-        boxesRecyclerView.adapter = LocationsRecyclerViewAdapter(this.context, items) { location, pos -> onBoxesListItemClick(location, pos)}
+        boxesRecyclerView.adapter = LocationsRecyclerViewAdapter(this.context, items, {id -> boxesDBHelper.removeLocation(id)}){ location, pos -> onBoxesListItemClick(location, pos)}
     }
 
     private fun onBoxesListItemClick(location: LocationInfo, position : Int) {

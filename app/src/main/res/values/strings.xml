@@ -15,4 +15,7 @@
     <string name="card_search_button_string">Search</string>
     <string name="Boxes_Add_Button_String">add</string>
     <string name="menu_boxes">Boxes</string>
+
+    <string name="low_price">From %1%s</string>
+    <string name="high_price">To %1%s</string>
 </resources>

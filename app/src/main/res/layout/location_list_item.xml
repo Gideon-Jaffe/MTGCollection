@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:text="Big Box"
         android:textColor="@color/black"
-        android:textSize="20sp"
+        android:textSize="30sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
@@ -20,11 +20,12 @@
         android:layout_height="wrap_content"
         android:id="@+id/location_low_price"
         android:text="From 1.25"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:layout_marginStart="16dp"
         app:layout_constraintStart_toEndOf="@+id/location_name"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/location_name"
         />
 
     <TextView
@@ -32,11 +33,23 @@
         android:layout_height="wrap_content"
         android:id="@+id/location_high_price"
         android:text="To 10.25"
-        android:textSize="16sp"
+        android:textSize="20sp"
         android:textStyle="bold"
         android:layout_marginStart="16dp"
         app:layout_constraintStart_toEndOf="@+id/location_low_price"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/location_low_price"
+        app:layout_constraintBottom_toBottomOf="@+id/location_low_price"
         />
+
+    <ImageButton
+        android:id="@+id/location_trash_button"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:background="@drawable/trash_icon"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/location_name"
+        app:layout_constraintBottom_toBottomOf="@+id/location_name"
+        android:layout_marginEnd="15dp"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

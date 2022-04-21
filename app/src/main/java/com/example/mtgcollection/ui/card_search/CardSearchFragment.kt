@@ -21,6 +21,7 @@ import android.util.DisplayMetrics
 import android.view.*
 import android.widget.*
 import androidx.appcompat.widget.SwitchCompat
+import com.example.mtgcollection.LocationInfo
 import org.json.JSONObject
 
 class CardSearchFragment : Fragment() {
@@ -138,18 +139,23 @@ class CardSearchFragment : Fragment() {
         dialog.findViewById<ImageView>(com.example.mtgcollection.R.id.popup_set_image).setImageDrawable(cardInfo.getSetImage(context))
         dialog.findViewById<EditText>(com.example.mtgcollection.R.id.popup_amount_input).setText("1")
 
+        val locationArray = collectionTableHelper.getAllBoxes()
+        locationArray.add(0, LocationInfo(null, "No Box", null, null))
+        dialog.findViewById<Spinner>(com.example.mtgcollection.R.id.popup_location_spinner).adapter = ArrayAdapter(requireContext(), R.layout.simple_list_item_1, locationArray)
+
         //set On Click Listener
         dialog.findViewById<Button>(com.example.mtgcollection.R.id.popup_add_button).setOnClickListener {
             cardInfo.isFoil = dialog.findViewById<SwitchCompat>(com.example.mtgcollection.R.id.popup_foil_spinner).isChecked
             val amountText = dialog.findViewById<EditText>(com.example.mtgcollection.R.id.popup_amount_input).text.toString()
-            if (amountText != "" && amountText != "0") {cardInfo.amount = amountText.toInt(); dialog.hide(); addCardToCollection(cardInfo)}
+            val locationInfo = dialog.findViewById<Spinner>(com.example.mtgcollection.R.id.popup_location_spinner).selectedItem as LocationInfo
+            if (amountText != "" && amountText != "0") {cardInfo.amount = amountText.toInt(); dialog.hide(); addCardToCollection(cardInfo, locationInfo.locationId)}
             else {Toast.makeText(context, "Need an amount", Toast.LENGTH_SHORT).show()}}
         dialog.window?.setLayout(((width/9)*8).toInt(), ((width/9)*8).toInt())
         dialog.show()
     }
 
-    private fun addCardToCollection(cardInfo: MTGCardInfo) {
-        if (collectionTableHelper.addOne(cardInfo)){
+    private fun addCardToCollection(cardInfo: MTGCardInfo, locationId: Int? = null) {
+        if (collectionTableHelper.addOne(cardInfo, locationId)){
             Toast.makeText(context, "Successfully added ${cardInfo.card_name}", Toast.LENGTH_SHORT).show()
         } else {
             Toast.makeText(context, "Error Adding ${cardInfo.card_name}", Toast.LENGTH_SHORT).show()
