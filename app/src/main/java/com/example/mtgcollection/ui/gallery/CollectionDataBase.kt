@@ -5,7 +5,6 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.location.Location
 import com.example.mtgcollection.CardsInLocationInfo
 import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.MTGCardInfo
@@ -39,7 +38,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
 
         val createCardInLocationTableStatement = "CREATE TABLE $CARD_IN_LOCATION_TABLE (" +
                 "$COLUMN_ID TEXT, " +
-                "$COLUMN_IS_FOIL TEXT, " +
+                "$COLUMN_IS_FOIL INTEGER, " +
                 "$COLUMN_LOCATION_ID INTEGER, " +
                 "$COLUMN_AMOUNT INTEGER, " +
                 "PRIMARY KEY ($COLUMN_ID, $COLUMN_IS_FOIL, $COLUMN_LOCATION_ID))"
@@ -180,9 +179,9 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             arrayOf(id.toString())
         )
         if (delete == 1) {
-            val contentValues : ContentValues = ContentValues()
+            val contentValues = ContentValues()
             contentValues.putNull(COLUMN_LOCATION_ID)
-            var update = sqLiteDatabase.update(
+            sqLiteDatabase.update(
                 CARD_IN_LOCATION_TABLE, contentValues, "$COLUMN_LOCATION_ID=?",
                 arrayOf(id.toString())
             )
@@ -205,6 +204,31 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             }while (cursor.moveToNext())
         }
         cursor.close()
+        return returnList
+    }
+
+    fun getAllCardsInLocation(locationId: Int) : ArrayList<MTGCardInfo> {
+        if (locationId < 0) {
+            return getAllCards()
+        }
+        val returnList = ArrayList<MTGCardInfo>()
+
+        val queryStringCards = "SELECT ${COLLECTION_TABLE}.$COLUMN_ID, $COLUMN_CARD_NAME, $COLUMN_CARD_SET, ${COLLECTION_TABLE}.$COLUMN_IS_FOIL, $COLUMN_RARITY, ${CARD_IN_LOCATION_TABLE}.$COLUMN_AMOUNT AS $COLUMN_AMOUNT," +
+                " $COLUMN_USD, $COLUMN_USD_FOIL, $COLUMN_EUR, $COLUMN_EUR_FOIL, $COLUMN_TIX, $COLUMN_TIX_FOIL, $COLUMN_PRICE_LAST_UPDATED" +
+                " FROM $COLLECTION_TABLE INNER JOIN $CARD_IN_LOCATION_TABLE ON ${COLLECTION_TABLE}.$COLUMN_ID = ${CARD_IN_LOCATION_TABLE}.$COLUMN_ID AND ${COLLECTION_TABLE}.$COLUMN_IS_FOIL = ${CARD_IN_LOCATION_TABLE}.$COLUMN_IS_FOIL" +
+                " WHERE ${CARD_IN_LOCATION_TABLE}.$COLUMN_LOCATION_ID=${locationId}"
+
+        val cursor = sqLiteDatabase.rawQuery(queryStringCards, null)
+
+        if (cursor.moveToFirst()) {
+            var cardInfo : MTGCardInfo
+            do {
+                cardInfo = cursorToCardInfo(cursor)!!
+                returnList.add(cardInfo)
+            }while (cursor.moveToNext())
+        }
+        cursor.close()
+
         return returnList
     }
 

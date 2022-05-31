@@ -31,7 +31,7 @@ class BoxesFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         boxesViewModel =
             ViewModelProvider(this)[BoxesViewModel::class.java]
 
@@ -70,14 +70,14 @@ class BoxesFragment : Fragment() {
 
     private fun createLocationDialog() {
         val dialog = Dialog(this.requireContext())
-        dialog.setContentView(com.example.mtgcollection.R.layout.add_location_popup)
+        dialog.setContentView(R.layout.add_location_popup)
 
         //set On Click Listener
-        dialog.findViewById<Button>(com.example.mtgcollection.R.id.location_popup_add_button).setOnClickListener {
+        dialog.findViewById<Button>(R.id.location_popup_add_button).setOnClickListener {
             val name = dialog.findViewById<EditText>(R.id.location_popup_name_input).text.toString()
             val lowPrice = dialog.findViewById<EditText>(R.id.location_popup_low_price).text.toString().toFloat()
             val highPrice = dialog.findViewById<EditText>(R.id.location_popup_high_price).text.toString().toFloat()
-            var location : LocationInfo = LocationInfo(0, name, lowPrice, highPrice)
+            val location = LocationInfo(0, name, lowPrice, highPrice)
             dialog.hide(); addLocationToCollection(location)}
         dialog.show()
     }

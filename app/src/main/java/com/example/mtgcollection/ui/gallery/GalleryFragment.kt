@@ -4,12 +4,16 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.MTGCardInfo
 import com.example.mtgcollection.R
 import com.example.mtgcollection.databinding.FragmentGalleryBinding
@@ -19,6 +23,7 @@ class GalleryFragment : Fragment() {
     private lateinit var galleryViewModel: GalleryViewModel
     private var _binding: FragmentGalleryBinding? = null
 
+    private lateinit var locationSpinner : Spinner
     private lateinit var newRecyclerview : RecyclerView
     private lateinit var newArrayList : ArrayList<MTGCardInfo>
 
@@ -31,7 +36,7 @@ class GalleryFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         galleryViewModel =
             ViewModelProvider(this)[GalleryViewModel::class.java]
 
@@ -47,6 +52,9 @@ class GalleryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        locationSpinner = view.findViewById(R.id.gallery_location_spinner)
+        setLocations()
+
         newRecyclerview = view.findViewById(R.id.recView)
         newRecyclerview.setHasFixedSize(true)
         newRecyclerview.layoutManager = LinearLayoutManager(context)
@@ -59,8 +67,32 @@ class GalleryFragment : Fragment() {
         _binding = null
     }
 
+    private fun setLocations() {
+        val locationsArray = ArrayList<LocationInfo>()
+        locationsArray.add(LocationInfo(-1, "ALL", 0.0F, 10000.0F))
+        locationsArray.addAll(collectionDBHelper.getAllBoxes())
+
+        locationSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, locationsArray)
+        locationSpinner.onItemSelectedListener = object :
+            AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
+                val loc : LocationInfo = locationSpinner.selectedItem as LocationInfo
+                getCardsInBox(loc.locationId!!)
+            }
+
+            override fun onNothingSelected(p0: AdapterView<*>?) {
+                getUserData()
+            }
+
+        }
+    }
+
     private fun getUserData() {
         newRecyclerview.adapter = CollectionRecyclerViewAdapter(this.context, collectionDBHelper.getAllCards()) { card, pos -> onCollectionListItemClick(card, pos)}
+    }
+
+    private fun getCardsInBox(boxId : Int) {
+        newRecyclerview.adapter = CollectionRecyclerViewAdapter(this.context, collectionDBHelper.getAllCardsInLocation(boxId)) { card, pos -> onCollectionListItemClick(card, pos)}
     }
 
     private fun onCollectionListItemClick(cardInfo: MTGCardInfo, position : Int) {
