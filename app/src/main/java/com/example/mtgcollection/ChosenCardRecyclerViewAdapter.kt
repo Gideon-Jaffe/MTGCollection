@@ -44,9 +44,13 @@ class ChosenCardRecyclerViewAdapter(private val context: Context?, private val m
         val currentItem = mtgCardInfoList[position]
         holder.cardName.text = currentItem.card_name
         if (currentItem.getSetImage(context) != null) {
+            holder.setImage.visibility = View.VISIBLE
             holder.setImage.setImageDrawable(currentItem.getSetImage(context))
+            holder.setText.visibility = View.GONE
         } else {
-            holder.setImage.setImageDrawable(null)
+            holder.setText.visibility = View.VISIBLE
+            holder.setText.text = currentItem.set.uppercase()
+            holder.setImage.visibility = View.GONE
         }
         holder.priceText.text = currentItem.getPriceString()
 
@@ -59,6 +63,7 @@ class ChosenCardRecyclerViewAdapter(private val context: Context?, private val m
     class ChosenCardViewHolder(itemView: View, private val onItemClicked: (position: Int) -> Unit) : RecyclerView.ViewHolder(itemView), View.OnClickListener{
         val cardName : TextView = itemView.findViewById(R.id.CardNameText)
         val setImage : AppCompatImageView = itemView.findViewById(R.id.SetImage)
+        val setText : TextView = itemView.findViewById(R.id.chosen_card_list_item_set_text)
         val priceText : TextView = itemView.findViewById(R.id.PriceText)
 
         init {
