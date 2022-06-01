@@ -21,6 +21,7 @@ import com.example.mtgcollection.ui.slideshow.Notifications
 import org.json.JSONObject
 import java.text.FieldPosition
 import java.text.SimpleDateFormat
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
@@ -68,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePrices() {
         val collectionTableHelper = CollectionDBHelper(this)
-        val cards = collectionTableHelper.getAllCards()
+        val cards = collectionTableHelper.getAllCards(daysAgo = 1)
         collectionTableHelper.close()
         for (card in cards) {
             val url = "https://api.scryfall.com//cards//named?exact=${card.card_name}&set=${card.set}"
@@ -96,9 +97,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun createNotification(message: String) {
-        val simpleDateFormat = SimpleDateFormat("dd/MM/yy")
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US)
         val formattedDate = StringBuffer()
-        simpleDateFormat.format(java.util.Calendar.getInstance().time, formattedDate, FieldPosition(0))
+        simpleDateFormat.format(Calendar.getInstance().time, formattedDate, FieldPosition(0))
         val notification = Notifications(0, formattedDate.toString(), "Card Changed Category", message)
         val notificationDBHelper = NotificationDBHelper(this)
         notificationDBHelper.addOne(notification)

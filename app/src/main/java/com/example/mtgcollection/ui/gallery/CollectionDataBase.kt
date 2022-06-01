@@ -9,6 +9,9 @@ import com.example.mtgcollection.CardsInLocationInfo
 import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.MTGCardInfo
 import com.example.mtgcollection.Prices
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.ArrayList
 
 class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyCollection", null, 1) {
     private var sqLiteDatabase: SQLiteDatabase = this.writableDatabase
@@ -81,7 +84,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             contentValues.put(COLUMN_EUR_FOIL, card_info.prices.eur_foil)
             contentValues.put(COLUMN_TIX, card_info.prices.tix)
             contentValues.put(COLUMN_TIX_FOIL, card_info.prices.tix_foil)
-            contentValues.put(COLUMN_PRICE_LAST_UPDATED, java.util.Calendar.getInstance().time.toString())
+            contentValues.put(COLUMN_PRICE_LAST_UPDATED, SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(Calendar.getInstance().time))
 
             val insert = sqLiteDatabase.insert(COLLECTION_TABLE, null, contentValues)
             updateAmountOfCardInLocation(card_info, card_info.amount, locationId)
@@ -152,7 +155,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         contentValues.put(COLUMN_EUR_FOIL, new_prices.eur_foil)
         contentValues.put(COLUMN_TIX, new_prices.tix)
         contentValues.put(COLUMN_TIX_FOIL, new_prices.tix_foil)
-        contentValues.put(COLUMN_PRICE_LAST_UPDATED, java.util.Calendar.getInstance().time.toString())
+        contentValues.put(COLUMN_PRICE_LAST_UPDATED, SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(Calendar.getInstance().time))
 
         val update = sqLiteDatabase.update(
         COLLECTION_TABLE, contentValues, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=?",
@@ -193,10 +196,16 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return delete == 1
     }
 
-    fun getAllCards(ordering: Ordering = Ordering.NONE) : ArrayList<MTGCardInfo> {
+    fun getAllCards(ordering: Ordering = Ordering.NONE, daysAgo : Int = 0) : ArrayList<MTGCardInfo> {
         val returnList = ArrayList<MTGCardInfo>()
-
-        val queryString = "SELECT * FROM $COLLECTION_TABLE" + getOrderingString(ordering)
+        val queryString : String = if (daysAgo > 0) {
+            val startDate = Calendar.getInstance()
+            startDate.add(Calendar.DATE, -daysAgo)
+            val isoString = SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(startDate.time)
+            "SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_PRICE_LAST_UPDATED < '$isoString'" + getOrderingString(ordering)
+        } else {
+            "SELECT * FROM $COLLECTION_TABLE" + getOrderingString(ordering)
+        }
 
         val cursor = sqLiteDatabase.rawQuery(queryString, null)
 
