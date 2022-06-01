@@ -13,6 +13,10 @@ import com.example.mtgcollection.Prices
 class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyCollection", null, 1) {
     private var sqLiteDatabase: SQLiteDatabase = this.writableDatabase
 
+    enum class Ordering {
+        NONE, NAME_ASC, NAME_DESC, PRICE_ASC, PRICE_DESC
+    }
+
     override fun onCreate(db: SQLiteDatabase?) {
         val createTableStatement = "CREATE TABLE $COLLECTION_TABLE (" +
                 "$COLUMN_ID TEXT, " +
@@ -189,10 +193,10 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return delete == 1
     }
 
-    fun getAllCards() : ArrayList<MTGCardInfo> {
+    fun getAllCards(ordering: Ordering = Ordering.NONE) : ArrayList<MTGCardInfo> {
         val returnList = ArrayList<MTGCardInfo>()
 
-        val queryString = "SELECT * FROM $COLLECTION_TABLE"
+        val queryString = "SELECT * FROM $COLLECTION_TABLE" + getOrderingString(ordering)
 
         val cursor = sqLiteDatabase.rawQuery(queryString, null)
 
@@ -207,16 +211,16 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnList
     }
 
-    fun getAllCardsInLocation(locationId: Int) : ArrayList<MTGCardInfo> {
+    fun getAllCardsInLocation(locationId: Int, ordering: Ordering = Ordering.NONE) : ArrayList<MTGCardInfo> {
         if (locationId < 0) {
-            return getAllCards()
+            return getAllCards(ordering)
         }
         val returnList = ArrayList<MTGCardInfo>()
 
         val queryStringCards = "SELECT ${COLLECTION_TABLE}.$COLUMN_ID, $COLUMN_CARD_NAME, $COLUMN_CARD_SET, ${COLLECTION_TABLE}.$COLUMN_IS_FOIL, $COLUMN_RARITY, ${CARD_IN_LOCATION_TABLE}.$COLUMN_AMOUNT AS $COLUMN_AMOUNT," +
                 " $COLUMN_USD, $COLUMN_USD_FOIL, $COLUMN_EUR, $COLUMN_EUR_FOIL, $COLUMN_TIX, $COLUMN_TIX_FOIL, $COLUMN_PRICE_LAST_UPDATED" +
                 " FROM $COLLECTION_TABLE INNER JOIN $CARD_IN_LOCATION_TABLE ON ${COLLECTION_TABLE}.$COLUMN_ID = ${CARD_IN_LOCATION_TABLE}.$COLUMN_ID AND ${COLLECTION_TABLE}.$COLUMN_IS_FOIL = ${CARD_IN_LOCATION_TABLE}.$COLUMN_IS_FOIL" +
-                " WHERE ${CARD_IN_LOCATION_TABLE}.$COLUMN_LOCATION_ID=${locationId}"
+                " WHERE ${CARD_IN_LOCATION_TABLE}.$COLUMN_LOCATION_ID=$locationId" + getOrderingString(ordering)
 
         val cursor = sqLiteDatabase.rawQuery(queryStringCards, null)
 
@@ -230,6 +234,18 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         cursor.close()
 
         return returnList
+    }
+
+    private fun getOrderingString(ordering: Ordering) : String {
+        val returnString : String = when(ordering) {
+            Ordering.NAME_ASC -> " ORDER BY $COLLECTION_TABLE.$COLUMN_CARD_NAME ASC"
+            Ordering.NAME_DESC -> " ORDER BY $COLLECTION_TABLE.$COLUMN_CARD_NAME DESC"
+            Ordering.PRICE_ASC -> " ORDER BY $COLLECTION_TABLE.$COLUMN_USD ASC"
+            Ordering.PRICE_DESC -> " ORDER BY $COLLECTION_TABLE.$COLUMN_USD DESC"
+            Ordering.NONE -> ""
+        }
+
+        return returnString
     }
 
     fun getAllBoxes() : ArrayList<LocationInfo> {

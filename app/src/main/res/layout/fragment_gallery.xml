@@ -6,13 +6,56 @@
     android:layout_height="match_parent"
     tools:context=".ui.gallery.GalleryFragment">
 
+    <TextView
+        android:layout_margin="10dp"
+        android:id="@+id/gallery_location_text_view"
+        android:text="Location: "
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/gallery_location_spinner"/>
+
     <Spinner
         android:id="@+id/gallery_location_spinner"
-        android:layout_width="match_parent"
-        android:layout_height="30dp"
-        app:layout_constraintTop_toTopOf="parent"
+        android:textSize="20sp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="@+id/gallery_location_text_view"
+        app:layout_constraintBottom_toBottomOf="@+id/gallery_location_text_view"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/gallery_location_text_view"/>
+
+    <TextView
+        android:layout_margin="10dp"
+        android:id="@+id/gallery_order_text_view"
+        android:text="Order By: "
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@+id/gallery_location_text_view"
         app:layout_constraintStart_toStartOf="parent"/>
+
+    <Spinner
+        android:id="@+id/gallery_order_by_spinner"
+        android:textSize="20sp"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="@+id/gallery_order_text_view"
+        app:layout_constraintBottom_toBottomOf="@+id/gallery_order_text_view"
+        app:layout_constraintStart_toEndOf="@+id/gallery_order_text_view"
+        app:layout_constraintEnd_toStartOf="@+id/gallery_des_asc_spinner"/>
+
+    <Spinner
+        android:id="@+id/gallery_des_asc_spinner"
+        android:textSize="20sp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="@+id/gallery_order_text_view"
+        app:layout_constraintBottom_toBottomOf="@+id/gallery_order_text_view"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/gallery_order_by_spinner"/>
 
     <View
         android:id="@+id/line"
@@ -22,7 +65,7 @@
         android:background="#C6C6C6"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gallery_location_spinner" />
+        app:layout_constraintTop_toBottomOf="@+id/gallery_order_text_view" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recView"

@@ -24,6 +24,8 @@ class GalleryFragment : Fragment() {
     private var _binding: FragmentGalleryBinding? = null
 
     private lateinit var locationSpinner : Spinner
+    private lateinit var orderMethodSpinner : Spinner
+    private lateinit var orderAscDesSpinner : Spinner
     private lateinit var newRecyclerview : RecyclerView
     private lateinit var newArrayList : ArrayList<MTGCardInfo>
 
@@ -52,19 +54,36 @@ class GalleryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        locationSpinner = view.findViewById(R.id.gallery_location_spinner)
-        setLocations()
-
         newRecyclerview = view.findViewById(R.id.recView)
         newRecyclerview.setHasFixedSize(true)
         newRecyclerview.layoutManager = LinearLayoutManager(context)
         newRecyclerview.itemAnimator = DefaultItemAnimator()
-        getUserData()
+
+        orderMethodSpinner = view.findViewById(R.id.gallery_order_by_spinner)
+        orderAscDesSpinner = view.findViewById(R.id.gallery_des_asc_spinner)
+        setOrderMethod()
+
+        locationSpinner = view.findViewById(R.id.gallery_location_spinner)
+        setLocations()
+
+        /*newRecyclerview = view.findViewById(R.id.recView)
+        newRecyclerview.setHasFixedSize(true)
+        newRecyclerview.layoutManager = LinearLayoutManager(context)
+        newRecyclerview.itemAnimator = DefaultItemAnimator()
+        getUserData()*/
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    private fun setOrderMethod() {
+        val orderTypes = ArrayList<String>(listOf("Name", "Price"))
+        val ascDes = ArrayList<String>(listOf("Ascending", "Descending"))
+
+        orderMethodSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, orderTypes)
+        orderAscDesSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, ascDes)
     }
 
     private fun setLocations() {
@@ -88,11 +107,26 @@ class GalleryFragment : Fragment() {
     }
 
     private fun getUserData() {
-        newRecyclerview.adapter = CollectionRecyclerViewAdapter(this.context, collectionDBHelper.getAllCards()) { card, pos -> onCollectionListItemClick(card, pos)}
+        newRecyclerview.adapter = CollectionRecyclerViewAdapter(this.context, collectionDBHelper.getAllCards(getOrderingMethod())) { card, pos -> onCollectionListItemClick(card, pos)}
     }
 
     private fun getCardsInBox(boxId : Int) {
-        newRecyclerview.adapter = CollectionRecyclerViewAdapter(this.context, collectionDBHelper.getAllCardsInLocation(boxId)) { card, pos -> onCollectionListItemClick(card, pos)}
+        val order = getOrderingMethod()
+        val cards = collectionDBHelper.getAllCardsInLocation(boxId, order)
+        newRecyclerview.adapter = CollectionRecyclerViewAdapter(this.context, cards) { card, pos -> onCollectionListItemClick(card, pos)}
+    }
+
+    private fun getOrderingMethod() : CollectionDBHelper.Ordering {
+        val method = orderMethodSpinner.selectedItem as String
+        val direction = orderAscDesSpinner.selectedItem as String
+
+        return when(method + direction) {
+            "NameAscending" -> CollectionDBHelper.Ordering.NAME_ASC
+            "NameDescending" -> CollectionDBHelper.Ordering.NAME_DESC
+            "PriceAscending" -> CollectionDBHelper.Ordering.PRICE_ASC
+            "PriceDescending" -> CollectionDBHelper.Ordering.PRICE_DESC
+            else -> CollectionDBHelper.Ordering.NONE
+        }
     }
 
     private fun onCollectionListItemClick(cardInfo: MTGCardInfo, position : Int) {
