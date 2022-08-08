@@ -66,10 +66,9 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
 
     fun addOne(card_info : MTGCardInfo, locationId : Int? = null) : Boolean
     {
-        if (getOneCard(card_info) != null) {
-            updateAmountOfCardInLocation(card_info, card_info.amount, locationId)
-            return updateAmount(card_info, true)
-        } else {
+        var insertCard = 1L
+        var insertCardInLocation = true
+        if (getOneCard(card_info) == null) {
             val contentValues = ContentValues()
 
             contentValues.put(COLUMN_ID, card_info.id)
@@ -86,10 +85,11 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             contentValues.put(COLUMN_TIX_FOIL, card_info.prices.tix_foil)
             contentValues.put(COLUMN_PRICE_LAST_UPDATED, SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(Calendar.getInstance().time))
 
-            val insert = sqLiteDatabase.insert(COLLECTION_TABLE, null, contentValues)
-            updateAmountOfCardInLocation(card_info, card_info.amount, locationId)
-            return -1L != insert
+            insertCard = sqLiteDatabase.insert(COLLECTION_TABLE, null, contentValues)
         }
+
+        insertCardInLocation = updateAmountOfCardInLocation(card_info, card_info.amount, locationId)
+        return (-1L != insertCard) && insertCardInLocation
     }
 
     private fun updateAmountOfCardInLocation(card_info : MTGCardInfo, amount : Int = 1, locationId : Int? = null) : Boolean {
