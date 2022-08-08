@@ -20,7 +20,7 @@
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/content_main.xml" value="0.25" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/fragment_boxes.xml" value="0.25" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/fragment_card_search.xml" value="0.20416666666666666" />
-        <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/fragment_gallery.xml" value="0.33" />
+        <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/fragment_gallery.xml" value="0.1" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/fragment_home.xml" value="0.2617753623188406" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/fragment_notifications.xml" value="0.18854166666666666" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/fragment_slideshow.xml" value="0.18854166666666666" />
@@ -28,8 +28,11 @@
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/location_list_item.xml" value="0.5" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/nav_header_main.xml" value="0.20520833333333333" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/notification_list_item.xml" value="0.25" />
+        <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/remove_card_popup.xml" value="0.1526293287729799" />
+        <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/layout/remove_card_popup_list_item.xml" value="0.1526293287729799" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/menu/activity_main_drawer.xml" value="0.20520833333333333" />
         <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/menu/main.xml" value="0.20520833333333333" />
+        <entry key="..\:/AndroidStudioProjects/MTGCollection/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" value="0.176" />
       </map>
     </option>
   </component>

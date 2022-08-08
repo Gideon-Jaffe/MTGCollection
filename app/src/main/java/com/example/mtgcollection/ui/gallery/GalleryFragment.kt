@@ -1,18 +1,17 @@
 package com.example.mtgcollection.ui.gallery
 
+import android.app.Dialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Spinner
-import android.widget.Toast
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.mtgcollection.CardsInLocationInfo
 import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.MTGCardInfo
 import com.example.mtgcollection.R
@@ -66,11 +65,6 @@ class GalleryFragment : Fragment() {
         locationSpinner = view.findViewById(R.id.gallery_location_spinner)
         setLocations()
 
-        /*newRecyclerview = view.findViewById(R.id.recView)
-        newRecyclerview.setHasFixedSize(true)
-        newRecyclerview.layoutManager = LinearLayoutManager(context)
-        newRecyclerview.itemAnimator = DefaultItemAnimator()
-        getUserData()*/
     }
 
     override fun onDestroyView() {
@@ -130,20 +124,78 @@ class GalleryFragment : Fragment() {
     }
 
     private fun onCollectionListItemClick(cardInfo: MTGCardInfo, position : Int) {
-        if (cardInfo.amount > 1) {
-            if (collectionDBHelper.updateAmount(cardInfo)) {
-                if (cardInfo.amount > 0) {
-                    newRecyclerview.adapter?.notifyItemChanged(position)
-                }
-            } else {
-                Toast.makeText(context, "Failure Removing ${cardInfo.card_name}", Toast.LENGTH_SHORT).show()
-            }
+        if ((locationSpinner.selectedItem as LocationInfo).locationId == -1) chooseLocationAndRemove(cardInfo)
+        if (collectionDBHelper.removeOne(cardInfo, (locationSpinner.selectedItem as LocationInfo).locationId)) {
+            newRecyclerview.adapter?.notifyItemRemoved(position)
         } else {
-            if (collectionDBHelper.removeOne(cardInfo, 0)) { //TODO(change to certain location)
-                newRecyclerview.adapter?.notifyItemRemoved(position)
-            } else {
-                Toast.makeText(context, "Failure Removing ${cardInfo.card_name}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                context,
+                "Failure Removing ${cardInfo.card_name}",
+                Toast.LENGTH_SHORT
+                ).show()
+        }
+    }
+
+    private fun chooseLocationAndRemove(cardInfo: MTGCardInfo){
+        val cardLocations = collectionDBHelper.getAllLocationsOfCard(cardInfo.id)
+        if (cardLocations.size == 1) removeCard(cardLocations[0].cardId, cardLocations[0].isCardFoil, cardLocations[0].locationId)
+        else {
+            val dialog = Dialog(this.requireContext())
+            dialog.setContentView(R.layout.remove_card_popup)
+            val recyclerView = dialog.findViewById<RecyclerView>(R.id.remove_card_popup_recyclerview)
+            recyclerView.layoutManager = LinearLayoutManager(this.requireContext())
+            recyclerView.adapter = RemoveCardPopupRecyclerAdapter(cardLocations, collectionDBHelper.getAllBoxes()) {cardId, isCardFoil, locationId -> dialog.hide(); removeCard(cardId, isCardFoil, locationId)}
+            dialog.window?.setLayout(800, 1000)
+            dialog.show()
+        }
+    }
+
+    private fun removeCard(cardId: String, isCardFoil : Boolean, locationId : Int) {
+        if (collectionDBHelper.removeOne(cardId, isCardFoil, locationId)) {
+            //TODO(update recycler view)
+        } else {
+            Toast.makeText(
+                context,
+                "Failure Removing $cardId",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    class RemoveCardPopupRecyclerAdapter(private val cardsInLocations : ArrayList<CardsInLocationInfo>, private val locations : ArrayList<LocationInfo>, val onItemClick : (String, Boolean, Int) -> Unit) :
+            RecyclerView.Adapter<RemoveCardPopupRecyclerAdapter.ThisViewHolder>() {
+
+                class ThisViewHolder(view : View, private val onItemClick : (Int) -> Unit) : RecyclerView.ViewHolder(view), View.OnClickListener {
+                    val thisButton : Button
+
+                    init {
+                        thisButton = view.findViewById(R.id.remove_card_popup_list_item_button)
+                        thisButton.setOnClickListener(this)
+                    }
+
+                    override fun onClick(p0: View?) {
+                        onItemClick(adapterPosition)
+                    }
+                }
+
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ThisViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(R.layout.remove_card_popup_list_item, parent, false)
+
+            return ThisViewHolder(view) { i ->
+                onItemClick(
+                    cardsInLocations[i].cardId,
+                    cardsInLocations[i].isCardFoil,
+                    cardsInLocations[i].locationId
+                )
             }
+        }
+
+        override fun onBindViewHolder(holder: ThisViewHolder, position: Int) {
+            holder.thisButton.text = locations.find { locationInfo -> locationInfo.locationId == cardsInLocations[position].locationId }?.locationName
+        }
+
+        override fun getItemCount(): Int {
+            return cardsInLocations.size
         }
     }
 }

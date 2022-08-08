@@ -135,7 +135,7 @@ class CardSearchFragment : Fragment() {
 
     private fun createCardDialog(cardInfo: MTGCardInfo) {
         val dialog = Dialog(this.requireContext())
-        dialog.setContentView(com.example.mtgcollection.R.layout.add_card_popup_test)
+        dialog.setContentView(com.example.mtgcollection.R.layout.add_card_popup_first)
         dialog.findViewById<TextView>(com.example.mtgcollection.R.id.add_card_popup_card_name).text = cardInfo.card_name
         dialog.findViewById<ImageView>(com.example.mtgcollection.R.id.add_card_popup_set_image).setImageDrawable(cardInfo.getSetImage(context))
         dialog.findViewById<TextView>(com.example.mtgcollection.R.id.add_card_popup_usd).text = "${cardInfo.prices.usd.toString()}$"
