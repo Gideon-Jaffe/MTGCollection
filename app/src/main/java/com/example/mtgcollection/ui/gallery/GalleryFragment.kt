@@ -139,7 +139,7 @@ class GalleryFragment : Fragment() {
                 Toast.makeText(context, "Failure Removing ${cardInfo.card_name}", Toast.LENGTH_SHORT).show()
             }
         } else {
-            if (collectionDBHelper.removeOne(cardInfo)) {
+            if (collectionDBHelper.removeOne(cardInfo, 0)) { //TODO(change to certain location)
                 newRecyclerview.adapter?.notifyItemRemoved(position)
             } else {
                 Toast.makeText(context, "Failure Removing ${cardInfo.card_name}", Toast.LENGTH_SHORT).show()
