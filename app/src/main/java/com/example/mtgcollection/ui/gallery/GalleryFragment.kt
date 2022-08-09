@@ -125,7 +125,7 @@ class GalleryFragment : Fragment() {
 
     private fun onCollectionListItemClick(cardInfo: MTGCardInfo, position : Int) {
         if ((locationSpinner.selectedItem as LocationInfo).locationId == -1) chooseLocationAndRemove(cardInfo)
-        if (collectionDBHelper.removeOne(cardInfo, (locationSpinner.selectedItem as LocationInfo).locationId)) {
+        else if (collectionDBHelper.removeOne(cardInfo, (locationSpinner.selectedItem as LocationInfo).locationId)) {
             newRecyclerview.adapter?.notifyItemRemoved(position)
         } else {
             Toast.makeText(

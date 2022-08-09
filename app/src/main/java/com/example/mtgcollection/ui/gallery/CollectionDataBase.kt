@@ -20,6 +20,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         NONE, NAME_ASC, NAME_DESC, PRICE_ASC, PRICE_DESC
     }
 
+    //Create Tables in Database
     override fun onCreate(db: SQLiteDatabase?) {
         val createTableStatement = "CREATE TABLE $COLLECTION_TABLE (" +
                 "$COLUMN_ID TEXT, " +
@@ -27,7 +28,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
                 "$COLUMN_CARD_SET TEXT, " +
                 "$COLUMN_IS_FOIL INTEGER, " +
                 "$COLUMN_RARITY CHAR, " +
-                "$COLUMN_AMOUNT INTEGER, " +
+                //"$COLUMN_AMOUNT INTEGER, " +
                 "$COLUMN_USD REAL, " +
                 "$COLUMN_USD_FOIL REAL, " +
                 "$COLUMN_EUR REAL, " +
@@ -64,6 +65,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         super.close()
     }
 
+    //Add A Card to Collection - Add card to database if card is not in database
     fun addOne(card_info : MTGCardInfo, locationId : Int? = null) : Boolean
     {
         var insertCard = 1L
@@ -76,7 +78,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             contentValues.put(COLUMN_CARD_SET, card_info.set)
             contentValues.put(COLUMN_IS_FOIL, card_info.isFoil)
             contentValues.put(COLUMN_RARITY, card_info.rarity)
-            contentValues.put(COLUMN_AMOUNT, card_info.amount)
+            //contentValues.put(COLUMN_AMOUNT, card_info.amount)
             contentValues.put(COLUMN_USD, card_info.prices.usd)
             contentValues.put(COLUMN_USD_FOIL, card_info.prices.usd_foil)
             contentValues.put(COLUMN_EUR, card_info.prices.eur)
@@ -92,13 +94,14 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return (-1L != insertCard) && insertCardInLocation
     }
 
-    private fun updateAmountOfCardInLocation(card_info : MTGCardInfo, amount : Int = 1, locationId : Int? = null) : Boolean {
-        val cardsInLocationInfo : CardsInLocationInfo? = getCardInLocation(card_info.id, card_info.isFoil, locationId)
+    //add or subtract cards from collection
+    private fun updateAmountOfCardInLocation(cardId: String, isCardFoil: Boolean, amount : Int = 1, locationId : Int? = null) : Boolean {
+        val cardsInLocationInfo : CardsInLocationInfo? = getCardInLocation(cardId, isCardFoil, locationId)
         val contentValues = ContentValues()
 
         if (cardsInLocationInfo == null) {
-            contentValues.put(COLUMN_ID, card_info.id)
-            contentValues.put(COLUMN_IS_FOIL, card_info.isFoil)
+            contentValues.put(COLUMN_ID, cardId)
+            contentValues.put(COLUMN_IS_FOIL, isCardFoil)
             contentValues.put(COLUMN_LOCATION_ID, locationId)
             contentValues.put(COLUMN_AMOUNT, amount)
 
@@ -106,7 +109,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             return -1L != insert
         } else {
             if (cardsInLocationInfo.amount + amount < 1) {
-                removeCardInLocation(card_info.id, card_info.isFoil, locationId)
+                removeCardInLocation(cardId, isCardFoil, locationId)
             } else {
                 contentValues.put(COLUMN_AMOUNT, cardsInLocationInfo.amount + amount)
                 val update = sqLiteDatabase.update(
@@ -119,6 +122,19 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return false
     }
 
+    private fun updateAmountOfCardInLocation(card_info : MTGCardInfo, amount : Int = 1, locationId : Int? = null) : Boolean {
+        return updateAmountOfCardInLocation(card_info.id, card_info.isFoil, amount, locationId)
+    }
+
+    /* delete card in location row from database */
+    private fun removeCardInLocation(cardId : String, isCardFoil : Boolean, locationId: Int?) : Boolean {
+        val delete = sqLiteDatabase.delete(
+            CARD_IN_LOCATION_TABLE, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?",
+            arrayOf(cardId, isCardFoil.toString(), locationId.toString()))
+        return delete == 1
+    }
+
+    //not in use
     private fun updateAmount(card_info: MTGCardInfo, add : Boolean = false) : Boolean {
         val contentValues = ContentValues()
         val foilInt = if (card_info.isFoil) 1 else 0
@@ -135,6 +151,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return update == 1
     }
 
+    //update price of card in database
     fun updatePrice(card_info: MTGCardInfo, new_prices: Prices) : Boolean {
         val contentValues = ContentValues()
 
@@ -153,25 +170,17 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return update == 1
     }
 
+    //Remove a card from location and from collection
     fun removeOne(cardId: String, isCardFoil: Boolean, locationId: Int?) : Boolean{
-        val cardInLocation = getCardInLocation(cardId, isCardFoil, locationId)
-
-        return if (cardInLocation != null && cardInLocation.amount > 1) {
-            updateAmountOfCardInLocation(MTGCardInfo(cardId, "", "", "", cardInLocation.amount, Prices(), isCardFoil), -1, locationId)
-        } else {
-            val foilInt = if (isCardFoil) 1 else 0
-            val delete = sqLiteDatabase.delete(
-                CARD_IN_LOCATION_TABLE, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?",
-                arrayOf(cardId, foilInt.toString(), locationId.toString())
-            )
-            delete == 1
-        }
+        return updateAmountOfCardInLocation(cardId, isCardFoil, -1, locationId)
     }
 
+    //Remove a card from location and from collection
     fun removeOne(card_info: MTGCardInfo, locationId: Int?) : Boolean {
         return removeOne(card_info.id, card_info.isFoil, locationId)
     }
 
+    //add location to database
     fun addLocation(location : LocationInfo) : Boolean {
         val contentValues = ContentValues()
 
@@ -183,6 +192,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return -1L != insert
     }
 
+    //remove location from database
     fun removeLocation(id : Int) : Boolean {
         val delete = sqLiteDatabase.delete(
             LOCATION_TABLE, "$COLUMN_LOCATION_ID=?",
@@ -199,6 +209,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return delete == 1
     }
 
+    //get location name from location id
     fun getLocationName(id : Int) : String {
         val queryString = "SELECT $COLUMN_LOCATION_NAME FROM $LOCATION_TABLE WHERE $COLUMN_LOCATION_ID=?"
 
@@ -212,11 +223,12 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnString
     }
 
-    fun getAllCards(ordering: Ordering = Ordering.NONE, daysAgo : Int = 0) : ArrayList<MTGCardInfo> {
+    /* Get all cards from database - option for ordering and for getting based on when the price was last updated */
+    fun getAllCards(ordering: Ordering = Ordering.NONE, priceUpdatedDaysAgo : Int = 0) : ArrayList<MTGCardInfo> {
         val returnList = ArrayList<MTGCardInfo>()
-        val queryString : String = if (daysAgo > 0) {
+        val queryString : String = if (priceUpdatedDaysAgo > 0) {
             val startDate = Calendar.getInstance()
-            startDate.add(Calendar.DATE, -daysAgo)
+            startDate.add(Calendar.DATE, -priceUpdatedDaysAgo)
             val isoString = SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(startDate.time)
             "SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_PRICE_LAST_UPDATED < '$isoString'" + getOrderingString(ordering)
         } else {
@@ -236,6 +248,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnList
     }
 
+    /* get all cards in certain location - option for ordering */
     fun getAllCardsInLocation(locationId: Int, ordering: Ordering = Ordering.NONE) : ArrayList<MTGCardInfo> {
         if (locationId < 0) {
             return getAllCards(ordering)
@@ -261,6 +274,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnList
     }
 
+    /* return all locations where card is present */
     fun getAllLocationsOfCard(cardId: String) : ArrayList<CardsInLocationInfo> {
         val returnList = ArrayList<CardsInLocationInfo>()
 
@@ -280,6 +294,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnList
     }
 
+    /* switch ordering enum to sql string */
     private fun getOrderingString(ordering: Ordering) : String {
         val returnString : String = when(ordering) {
             Ordering.NAME_ASC -> " ORDER BY $COLLECTION_TABLE.$COLUMN_CARD_NAME ASC"
@@ -292,6 +307,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnString
     }
 
+    /* get all locations */
     fun getAllBoxes() : ArrayList<LocationInfo> {
         val returnList = ArrayList<LocationInfo>()
 
@@ -310,6 +326,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnList
     }
 
+    /* see if card details are in database and returns the cards details */
     private fun getOneCard(card_info: MTGCardInfo) : MTGCardInfo?{
         val foilInt = if (card_info.isFoil) 1 else 0
 
@@ -324,6 +341,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnCard
     }
 
+    /* see if card is in collection and returns the cards in location details */
     private fun getCardInLocation(cardId : String, isCardFoil : Boolean, locationId: Int?) : CardsInLocationInfo? {
         val foilInt = if (isCardFoil) 1 else 0
 
@@ -338,12 +356,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return returnCardInLocation
     }
 
-    private fun removeCardInLocation(cardId : String, isCardFoil : Boolean, locationId: Int?) : Boolean {
-        val delete = sqLiteDatabase.delete(
-            CARD_IN_LOCATION_TABLE, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?",
-            arrayOf(cardId, isCardFoil.toString(), locationId.toString()))
-        return delete == 1
-    }
+
 
     companion object {
         const val COLLECTION_TABLE = "CARD_COLLECTION"
