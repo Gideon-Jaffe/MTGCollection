@@ -9,6 +9,7 @@ import com.example.mtgcollection.CardsInLocationInfo
 import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.MTGCardInfo
 import com.example.mtgcollection.Prices
+import java.sql.Array
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -78,7 +79,6 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             contentValues.put(COLUMN_CARD_SET, card_info.set)
             contentValues.put(COLUMN_IS_FOIL, card_info.isFoil)
             contentValues.put(COLUMN_RARITY, card_info.rarity)
-            //contentValues.put(COLUMN_AMOUNT, card_info.amount)
             contentValues.put(COLUMN_USD, card_info.prices.usd)
             contentValues.put(COLUMN_USD_FOIL, card_info.prices.usd_foil)
             contentValues.put(COLUMN_EUR, card_info.prices.eur)
@@ -112,10 +112,15 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
                 removeCardInLocation(cardId, isCardFoil, locationId)
             } else {
                 contentValues.put(COLUMN_AMOUNT, cardsInLocationInfo.amount + amount)
-                val update = sqLiteDatabase.update(
-                    CARD_IN_LOCATION_TABLE, contentValues, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?",
-                    arrayOf(cardsInLocationInfo.cardId, cardsInLocationInfo.isCardFoil.toString(), cardsInLocationInfo.locationId.toString())
-                )
+                val update = if (locationId != null) {
+                    sqLiteDatabase.update(
+                        CARD_IN_LOCATION_TABLE, contentValues, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?",
+                        arrayOf(cardsInLocationInfo.cardId, if (cardsInLocationInfo.isCardFoil) "1" else "0", cardsInLocationInfo.locationId.toString()))
+                } else {
+                    sqLiteDatabase.update(
+                        CARD_IN_LOCATION_TABLE, contentValues, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID IS NULL",
+                        arrayOf(cardsInLocationInfo.cardId, if (cardsInLocationInfo.isCardFoil) "1" else "0"))
+                }
                 return update == 1
             }
         }
@@ -344,10 +349,13 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
     /* see if card is in collection and returns the cards in location details */
     private fun getCardInLocation(cardId : String, isCardFoil : Boolean, locationId: Int?) : CardsInLocationInfo? {
         val foilInt = if (isCardFoil) 1 else 0
-
-        val queryString = "SELECT * FROM $CARD_IN_LOCATION_TABLE WHERE $COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?"
-
-        val cursor = sqLiteDatabase.rawQuery(queryString, arrayOf(cardId, foilInt.toString(), locationId.toString()))
+        val cursor : Cursor = if (locationId != null) {
+            val queryString = "SELECT * FROM $CARD_IN_LOCATION_TABLE WHERE $COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?"
+            sqLiteDatabase.rawQuery(queryString, arrayOf(cardId, foilInt.toString(), locationId.toString()))
+        } else {
+            val queryString = "SELECT * FROM $CARD_IN_LOCATION_TABLE WHERE $COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID IS NULL"
+            sqLiteDatabase.rawQuery(queryString, arrayOf(cardId, foilInt.toString()))
+        }
 
         cursor.moveToFirst()
         val returnCardInLocation = cursorToCardsInLocationInfo(cursor)
@@ -391,13 +399,12 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             cardInfo.set = cursor.getString(2)
             cardInfo.isFoil = cursor.getInt(3) == 1
             cardInfo.rarity = cursor.getString(4)
-            cardInfo.amount = cursor.getInt(5)
-            cardInfo.prices.usd = cursorColumnToString(cursor, 6)
-            cardInfo.prices.usd_foil = cursorColumnToString(cursor, 7)
-            cardInfo.prices.eur = cursorColumnToString(cursor, 8)
-            cardInfo.prices.eur_foil = cursorColumnToString(cursor, 9)
-            cardInfo.prices.tix = cursorColumnToString(cursor, 10)
-            cardInfo.prices.tix_foil = cursorColumnToString(cursor, 11)
+            cardInfo.prices.usd = cursorColumnToString(cursor, 5)
+            cardInfo.prices.usd_foil = cursorColumnToString(cursor, 6)
+            cardInfo.prices.eur = cursorColumnToString(cursor, 7)
+            cardInfo.prices.eur_foil = cursorColumnToString(cursor, 8)
+            cardInfo.prices.tix = cursorColumnToString(cursor, 9)
+            cardInfo.prices.tix_foil = cursorColumnToString(cursor, 10)
 
             return cardInfo
         }

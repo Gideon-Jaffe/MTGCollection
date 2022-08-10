@@ -69,7 +69,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun updatePrices() {
         val collectionTableHelper = CollectionDBHelper(this)
-        val cards = collectionTableHelper.getAllCards(daysAgo = 1)
+        val cards = collectionTableHelper.getAllCards(priceUpdatedDaysAgo = 1)
         collectionTableHelper.close()
         for (card in cards) {
             val url = "https://api.scryfall.com//cards//named?exact=${card.card_name}&set=${card.set}"
