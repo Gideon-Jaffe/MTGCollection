@@ -10,6 +10,6 @@ data class LocationInfo(var locationId: Int?, var locationName: String, var lowP
     }
 }
 
-data class CardsInLocationInfo(var cardId : String, var isCardFoil : Boolean, var locationId: Int, var amount : Int) {
+data class CardsInLocationInfo(var cardId : String, var isCardFoil : Boolean, var locationId: Int?, var amount : Int) {
 
 }

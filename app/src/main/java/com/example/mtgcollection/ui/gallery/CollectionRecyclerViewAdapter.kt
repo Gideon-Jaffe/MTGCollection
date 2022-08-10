@@ -19,7 +19,8 @@ class CollectionRecyclerViewAdapter(private val context : Context?, private val 
         val itemView = LayoutInflater.from(parent.context).inflate(
             R.layout.list_item,
             parent, false)
-        return MyViewHolder(itemView) { i -> onItemClicked(mtgCardInfoList[i], i); updateView(i) }
+        return MyViewHolder(itemView) { i -> onItemClicked(mtgCardInfoList[i], i);
+            updateView(i) }
     }
 
     override fun onBindViewHolder(holder: MyViewHolder, position: Int) {
@@ -41,8 +42,13 @@ class CollectionRecyclerViewAdapter(private val context : Context?, private val 
     }
 
     private fun updateView(position: Int) {
-        if (mtgCardInfoList[position].amount == 0) {
+        if (mtgCardInfoList[position].amount <= 1) {
             mtgCardInfoList.removeAt(position)
+            notifyItemRemoved(position)
+        }
+        else {
+            mtgCardInfoList[position].amount--
+            notifyItemChanged(position)
         }
     }
 

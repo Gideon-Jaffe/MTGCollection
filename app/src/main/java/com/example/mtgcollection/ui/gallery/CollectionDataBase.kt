@@ -5,6 +5,7 @@ import android.content.Context
 import android.database.Cursor
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import androidx.core.database.getIntOrNull
 import com.example.mtgcollection.CardsInLocationInfo
 import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.MTGCardInfo
@@ -107,7 +108,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             val insert = sqLiteDatabase.insert(CARD_IN_LOCATION_TABLE, null, contentValues)
             return -1L != insert
         } else {
-            if (cardsInLocationInfo.amount + amount < 1) {
+            return if (cardsInLocationInfo.amount + amount < 1) {
                 removeCardInLocation(cardId, isCardFoil, locationId)
             } else {
                 contentValues.put(COLUMN_AMOUNT, cardsInLocationInfo.amount + amount)
@@ -120,10 +121,9 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
                         CARD_IN_LOCATION_TABLE, contentValues, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID IS NULL",
                         arrayOf(cardsInLocationInfo.cardId, if (cardsInLocationInfo.isCardFoil) "1" else "0"))
                 }
-                return update == 1
+                update == 1
             }
         }
-        return false
     }
 
     private fun updateAmountOfCardInLocation(card_info : MTGCardInfo, amount : Int = 1, locationId : Int? = null) : Boolean {
@@ -236,7 +236,10 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             val isoString = SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(startDate.time)
             "SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_PRICE_LAST_UPDATED < '$isoString'" + getOrderingString(ordering)
         } else {
-            "SELECT * FROM $COLLECTION_TABLE" + getOrderingString(ordering)
+            "SELECT $COLLECTION_TABLE.*, SUM($CARD_IN_LOCATION_TABLE.$COLUMN_AMOUNT) " +
+                    "FROM $COLLECTION_TABLE INNER JOIN $CARD_IN_LOCATION_TABLE ON " +
+                    "$COLLECTION_TABLE.$COLUMN_ID = $CARD_IN_LOCATION_TABLE.$COLUMN_ID AND $COLLECTION_TABLE.$COLUMN_IS_FOIL = $CARD_IN_LOCATION_TABLE.$COLUMN_IS_FOIL " +
+                    "GROUP BY $COLLECTION_TABLE.$COLUMN_ID AND $COLLECTION_TABLE.$COLUMN_IS_FOIL" + getOrderingString(ordering)
         }
 
         val cursor = sqLiteDatabase.rawQuery(queryString, null)
@@ -244,7 +247,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         if (cursor.moveToFirst()) {
             var cardInfo : MTGCardInfo
             do {
-                cardInfo = cursorToCardInfo(cursor)!!
+                cardInfo = cursorToCardInfo(cursor, true)!!
                 returnList.add(cardInfo)
             }while (cursor.moveToNext())
         }
@@ -388,7 +391,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         const val COLUMN_LOW_PRICE = "LOWEST_PRICE"
         const val COLUMN_HIGH_PRICE = "HIGHEST_PRICE"
 
-        fun cursorToCardInfo(cursor: Cursor) : MTGCardInfo? {
+        fun cursorToCardInfo(cursor: Cursor, withAmount : Boolean = false) : MTGCardInfo? {
             if (cursor.count == 0) return null
 
             val cardInfo = MTGCardInfo("", "", "", "", 0, Prices())
@@ -404,6 +407,10 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             cardInfo.prices.eur_foil = cursorColumnToString(cursor, 8)
             cardInfo.prices.tix = cursorColumnToString(cursor, 9)
             cardInfo.prices.tix_foil = cursorColumnToString(cursor, 10)
+
+            if (withAmount) {
+                cardInfo.amount = cursor.getInt(12)
+            }
 
             return cardInfo
         }
@@ -428,7 +435,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
 
             cardsInLocationInfo.cardId = cursor.getString(0)
             cardsInLocationInfo.isCardFoil = cursor.getInt(1) == 1
-            cardsInLocationInfo.locationId = cursor.getInt(2)
+            cardsInLocationInfo.locationId = cursor.getIntOrNull(2)
             cardsInLocationInfo.amount = cursor.getInt(3)
 
             return cardsInLocationInfo

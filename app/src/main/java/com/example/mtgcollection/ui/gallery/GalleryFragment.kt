@@ -150,7 +150,7 @@ class GalleryFragment : Fragment() {
         }
     }
 
-    private fun removeCard(cardId: String, isCardFoil : Boolean, locationId : Int) {
+    private fun removeCard(cardId: String, isCardFoil : Boolean, locationId : Int?) {
         if (collectionDBHelper.removeOne(cardId, isCardFoil, locationId)) {
             //TODO(update recycler view)
         } else {
@@ -162,7 +162,7 @@ class GalleryFragment : Fragment() {
         }
     }
 
-    class RemoveCardPopupRecyclerAdapter(private val cardsInLocations : ArrayList<CardsInLocationInfo>, private val locations : ArrayList<LocationInfo>, val onItemClick : (String, Boolean, Int) -> Unit) :
+    class RemoveCardPopupRecyclerAdapter(private val cardsInLocations : ArrayList<CardsInLocationInfo>, private val locations : ArrayList<LocationInfo>, val onItemClick : (String, Boolean, Int?) -> Unit) :
             RecyclerView.Adapter<RemoveCardPopupRecyclerAdapter.ThisViewHolder>() {
 
                 class ThisViewHolder(view : View, private val onItemClick : (Int) -> Unit) : RecyclerView.ViewHolder(view), View.OnClickListener {
