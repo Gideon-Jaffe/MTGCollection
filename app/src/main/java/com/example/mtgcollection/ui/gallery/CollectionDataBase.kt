@@ -9,7 +9,6 @@ import com.example.mtgcollection.CardsInLocationInfo
 import com.example.mtgcollection.LocationInfo
 import com.example.mtgcollection.MTGCardInfo
 import com.example.mtgcollection.Prices
-import java.sql.Array
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
@@ -70,7 +69,6 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
     fun addOne(card_info : MTGCardInfo, locationId : Int? = null) : Boolean
     {
         var insertCard = 1L
-        var insertCardInLocation = true
         if (getOneCard(card_info) == null) {
             val contentValues = ContentValues()
 
@@ -90,7 +88,8 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             insertCard = sqLiteDatabase.insert(COLLECTION_TABLE, null, contentValues)
         }
 
-        insertCardInLocation = updateAmountOfCardInLocation(card_info, card_info.amount, locationId)
+        val insertCardInLocation : Boolean =
+            updateAmountOfCardInLocation(card_info, card_info.amount, locationId)
         return (-1L != insertCard) && insertCardInLocation
     }
 
