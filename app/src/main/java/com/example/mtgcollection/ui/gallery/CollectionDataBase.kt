@@ -138,9 +138,20 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
 
     /* delete card in location row from database */
     private fun removeCardInLocation(cardId : String, isCardFoil : Boolean, locationId: Int?) : Boolean {
-        val delete = sqLiteDatabase.delete(
-            CARD_IN_LOCATION_TABLE, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?",
-            arrayOf(cardId, isCardFoil.toString(), locationId.toString()))
+        val foilString = if(isCardFoil) "1" else "0"
+        val queryString : String
+        val delete = if (locationId != null) {
+            queryString = "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID=?"
+            sqLiteDatabase.delete(
+                CARD_IN_LOCATION_TABLE, queryString,
+                arrayOf(cardId, foilString, locationId.toString()))
+        } else {
+            queryString = "$COLUMN_ID=? AND $COLUMN_IS_FOIL=? AND $COLUMN_LOCATION_ID IS NULL"
+            sqLiteDatabase.delete(
+                CARD_IN_LOCATION_TABLE, queryString,
+                arrayOf(cardId, foilString))
+        }
+
         return delete == 1
     }
 
