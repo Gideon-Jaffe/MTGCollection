@@ -72,13 +72,13 @@ class BoxesFragment : Fragment() {
         val dialog = Dialog(this.requireContext())
         dialog.setContentView(R.layout.add_location_popup)
 
-        //set On Click Listener
+        //set On Click Listeners
         dialog.findViewById<Button>(R.id.location_popup_add_button).setOnClickListener {
             val name = dialog.findViewById<EditText>(R.id.location_popup_name_input).text.toString()
             val lowPrice = dialog.findViewById<EditText>(R.id.location_popup_low_price).text.toString().toFloat()
             val highPrice = dialog.findViewById<EditText>(R.id.location_popup_high_price).text.toString().toFloat()
             val location = LocationInfo(0, name, lowPrice, highPrice)
-            dialog.hide(); addLocationToCollection(location)}
+            dialog.hide(); addLocationToCollection(location); getBoxesData()}
         dialog.show()
     }
 

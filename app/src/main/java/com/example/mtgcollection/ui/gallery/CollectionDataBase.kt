@@ -27,9 +27,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
                 "$COLUMN_ID TEXT, " +
                 "$COLUMN_CARD_NAME TEXT, " +
                 "$COLUMN_CARD_SET TEXT, " +
-                "$COLUMN_IS_FOIL INTEGER, " +
                 "$COLUMN_RARITY CHAR, " +
-                //"$COLUMN_AMOUNT INTEGER, " +
                 "$COLUMN_USD REAL, " +
                 "$COLUMN_USD_FOIL REAL, " +
                 "$COLUMN_EUR REAL, " +
@@ -37,7 +35,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
                 "$COLUMN_TIX REAL, " +
                 "$COLUMN_TIX_FOIL REAL, " +
                 "$COLUMN_PRICE_LAST_UPDATED TEXT, " +
-                "PRIMARY KEY ($COLUMN_ID, $COLUMN_IS_FOIL))"
+                "PRIMARY KEY ($COLUMN_ID))"
 
         val createLocationStatement = "CREATE TABLE $LOCATION_TABLE (" +
                 "$COLUMN_LOCATION_ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -67,16 +65,15 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
     }
 
     //Add A Card to Collection - Add card to database if card is not in database
-    fun addOne(card_info : MTGCardInfo, locationId : Int? = null) : Boolean
-    {
+    fun addOne(card_info : MTGCardInfo, locationId : Int? = null) : Boolean {
         var insertCard = 1L
-        if (getOneCard(card_info) == null) {
+        val cardInDatabase = getOneCard(card_info)
+        if (cardInDatabase == null) {
             val contentValues = ContentValues()
 
             contentValues.put(COLUMN_ID, card_info.id)
             contentValues.put(COLUMN_CARD_NAME, card_info.card_name)
             contentValues.put(COLUMN_CARD_SET, card_info.set)
-            contentValues.put(COLUMN_IS_FOIL, card_info.isFoil)
             contentValues.put(COLUMN_RARITY, card_info.rarity)
             contentValues.put(COLUMN_USD, card_info.prices.usd)
             contentValues.put(COLUMN_USD_FOIL, card_info.prices.usd_foil)
@@ -87,6 +84,15 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             contentValues.put(COLUMN_PRICE_LAST_UPDATED, SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(Calendar.getInstance().time))
 
             insertCard = sqLiteDatabase.insert(COLLECTION_TABLE, null, contentValues)
+        }
+        else {
+            val yesterday = Calendar.getInstance()
+            yesterday.add(Calendar.DATE, -1)
+            if (SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).parse(cardInDatabase.prices.lastUpdated)
+                    ?.before(yesterday.time) == true)
+            {
+                updatePrices(card_info)
+            }
         }
 
         val insertCardInLocation : Boolean =
@@ -138,20 +144,19 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return delete == 1
     }
 
-    //not in use
-    private fun updateAmount(card_info: MTGCardInfo, add : Boolean = false) : Boolean {
+    private fun updatePrices(mtgCardInfo: MTGCardInfo) : Boolean {
         val contentValues = ContentValues()
-        val foilInt = if (card_info.isFoil) 1 else 0
 
-        if (add) {
-            contentValues.put(COLUMN_AMOUNT, ++card_info.amount)
-        } else {
-            contentValues.put(COLUMN_AMOUNT, --card_info.amount)
-        }
+        contentValues.put(COLUMN_USD, mtgCardInfo.prices.usd)
+        contentValues.put(COLUMN_USD_FOIL, mtgCardInfo.prices.usd_foil)
+        contentValues.put(COLUMN_EUR, mtgCardInfo.prices.eur)
+        contentValues.put(COLUMN_EUR_FOIL, mtgCardInfo.prices.eur_foil)
+        contentValues.put(COLUMN_TIX, mtgCardInfo.prices.tix)
+        contentValues.put(COLUMN_TIX_FOIL, mtgCardInfo.prices.tix_foil)
+        contentValues.put(COLUMN_PRICE_LAST_UPDATED, SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(Calendar.getInstance().time))
+
         val update = sqLiteDatabase.update(
-            COLLECTION_TABLE, contentValues, "$COLUMN_CARD_NAME=? AND $COLUMN_CARD_SET=? AND $COLUMN_IS_FOIL=?",
-            arrayOf(card_info.card_name, card_info.set, foilInt.toString()))
-
+            COLLECTION_TABLE, contentValues, "$COLUMN_ID=?", arrayOf(mtgCardInfo.id))
         return update == 1
     }
 
@@ -238,8 +243,8 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         } else {
             "SELECT $COLLECTION_TABLE.*, SUM($CARD_IN_LOCATION_TABLE.$COLUMN_AMOUNT) " +
                     "FROM $COLLECTION_TABLE INNER JOIN $CARD_IN_LOCATION_TABLE ON " +
-                    "$COLLECTION_TABLE.$COLUMN_ID = $CARD_IN_LOCATION_TABLE.$COLUMN_ID AND $COLLECTION_TABLE.$COLUMN_IS_FOIL = $CARD_IN_LOCATION_TABLE.$COLUMN_IS_FOIL " +
-                    "GROUP BY $COLLECTION_TABLE.$COLUMN_ID AND $COLLECTION_TABLE.$COLUMN_IS_FOIL" + getOrderingString(ordering)
+                    "$COLLECTION_TABLE.$COLUMN_ID = $CARD_IN_LOCATION_TABLE.$COLUMN_ID " +
+                    "GROUP BY $COLLECTION_TABLE.$COLUMN_ID" + getOrderingString(ordering)
         }
 
         val cursor = sqLiteDatabase.rawQuery(queryString, null)
@@ -335,11 +340,10 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
 
     /* see if card details are in database and returns the cards details */
     private fun getOneCard(card_info: MTGCardInfo) : MTGCardInfo?{
-        val foilInt = if (card_info.isFoil) 1 else 0
 
-        val queryString = "SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_CARD_NAME=? AND $COLUMN_CARD_SET=? AND $COLUMN_IS_FOIL=?"
+        val queryString = "SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_ID=?"
 
-        val cursor = sqLiteDatabase.rawQuery(queryString, arrayOf(card_info.card_name, card_info.set, foilInt.toString()))
+        val cursor = sqLiteDatabase.rawQuery(queryString, arrayOf(card_info.id))
 
         cursor.moveToFirst()
         val returnCard = cursorToCardInfo(cursor)
@@ -399,17 +403,17 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             cardInfo.id = cursor.getString(0)
             cardInfo.card_name = cursor.getString(1)
             cardInfo.set = cursor.getString(2)
-            cardInfo.isFoil = cursor.getInt(3) == 1
-            cardInfo.rarity = cursor.getString(4)
-            cardInfo.prices.usd = cursorColumnToString(cursor, 5)
-            cardInfo.prices.usd_foil = cursorColumnToString(cursor, 6)
-            cardInfo.prices.eur = cursorColumnToString(cursor, 7)
-            cardInfo.prices.eur_foil = cursorColumnToString(cursor, 8)
-            cardInfo.prices.tix = cursorColumnToString(cursor, 9)
-            cardInfo.prices.tix_foil = cursorColumnToString(cursor, 10)
+            cardInfo.rarity = cursor.getString(3)
+            cardInfo.prices.usd = cursorColumnToString(cursor, 4)
+            cardInfo.prices.usd_foil = cursorColumnToString(cursor, 5)
+            cardInfo.prices.eur = cursorColumnToString(cursor, 6)
+            cardInfo.prices.eur_foil = cursorColumnToString(cursor, 7)
+            cardInfo.prices.tix = cursorColumnToString(cursor, 8)
+            cardInfo.prices.tix_foil = cursorColumnToString(cursor, 9)
+            cardInfo.prices.lastUpdated = cursorColumnToString(cursor, 10)
 
             if (withAmount) {
-                cardInfo.amount = cursor.getInt(12)
+                cardInfo.amount = cursor.getInt(11)
             }
 
             return cardInfo

@@ -136,15 +136,9 @@ class CardSearchFragment : Fragment() {
 
     private fun createCardDialog(cardInfo: MTGCardInfo) {
         val dialog = Dialog(this.requireContext())
-        dialog.setContentView(R.layout.add_card_popup_first)
-        dialog.findViewById<TextView>(R.id.add_card_popup_card_name).text = cardInfo.card_name
-        dialog.findViewById<ImageView>(R.id.add_card_popup_set_image).setImageDrawable(cardInfo.getSetImage(context))
-        dialog.findViewById<TextView>(R.id.add_card_popup_usd).text = "${cardInfo.prices.usd.toString()}$"
-        dialog.findViewById<TextView>(R.id.add_card_popup_eur).text = cardInfo.prices.eur.toString()
-        dialog.findViewById<TextView>(R.id.add_card_popup_tix).text = cardInfo.prices.tix.toString()
-        val recycler = dialog.findViewById<RecyclerView>(R.id.add_card_popup_recycler)
-        recycler.layoutManager = LinearLayoutManager(context)
-        recycler.adapter = AddCardPopupRecyclerViewAdapter(collectionTableHelper.getAllLocationsOfCard(cardInfo.id), collectionTableHelper.getAllBoxes())
+        setDialogLayoutAndStrings(dialog, cardInfo)
+        setDialogLocationsRecyclerView(dialog, cardInfo.id)
+
         dialog.findViewById<Button>(R.id.add_card_popup_add_button).setOnClickListener {
             val innerDialog = Dialog(this.requireContext())
             innerDialog.setContentView(R.layout.add_card_popup)
@@ -161,13 +155,28 @@ class CardSearchFragment : Fragment() {
                 cardInfo.isFoil = innerDialog.findViewById<SwitchCompat>(R.id.popup_foil_spinner).isChecked
                 val amountText = innerDialog.findViewById<EditText>(R.id.popup_amount_input).text.toString()
                 val locationInfo = innerDialog.findViewById<Spinner>(R.id.popup_location_spinner).selectedItem as LocationInfo
-                if (amountText != "" && amountText != "0") {cardInfo.amount = amountText.toInt(); innerDialog.hide(); addCardToCollection(cardInfo, locationInfo.locationId)}
+                if (amountText != "" && amountText != "0") {cardInfo.amount = amountText.toInt(); innerDialog.hide(); addCardToCollection(cardInfo, locationInfo.locationId); setDialogLocationsRecyclerView(dialog, cardInfo.id)}
                 else {Toast.makeText(context, "Need an amount", Toast.LENGTH_SHORT).show()}}
             innerDialog.window?.setLayout(((width/9)*8).toInt(), ((width/9)*8).toInt())
             innerDialog.show()
         }
         dialog.window?.setLayout(((width/9)*8).toInt(), ((width/9)*8).toInt())
         dialog.show()
+    }
+
+    private fun setDialogLayoutAndStrings(dialog : Dialog, cardInfo: MTGCardInfo) {
+        dialog.setContentView(R.layout.add_card_popup_first)
+        dialog.findViewById<TextView>(R.id.add_card_popup_card_name).text = cardInfo.card_name
+        dialog.findViewById<ImageView>(R.id.add_card_popup_set_image).setImageDrawable(cardInfo.getSetImage(context))
+        dialog.findViewById<TextView>(R.id.add_card_popup_usd).text = "${cardInfo.prices.usd.toString()}$"
+        dialog.findViewById<TextView>(R.id.add_card_popup_eur).text = cardInfo.prices.eur.toString()
+        dialog.findViewById<TextView>(R.id.add_card_popup_tix).text = cardInfo.prices.tix.toString()
+    }
+
+    private fun setDialogLocationsRecyclerView(dialog : Dialog, cardId : String) {
+        val recycler = dialog.findViewById<RecyclerView>(R.id.add_card_popup_recycler)
+        recycler.layoutManager = LinearLayoutManager(context)
+        recycler.adapter = AddCardPopupRecyclerViewAdapter(collectionTableHelper.getAllLocationsOfCard(cardId), collectionTableHelper.getAllBoxes())
     }
 
     private fun addCardToCollection(cardInfo: MTGCardInfo, locationId: Int? = null) {

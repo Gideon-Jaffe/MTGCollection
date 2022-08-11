@@ -82,7 +82,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateCardPrice(card:MTGCardInfo, response:JSONObject) {
-        val collectionTableHelper = CollectionDBHelper(this)
+        /*val collectionTableHelper = CollectionDBHelper(this)
         val prices = Prices(response.getJSONObject("prices"))
         val (oldPrice, newPrice) = if (card.isFoil) {
             (card.prices.usd_foil!! to if (prices.usd_foil.isNullOrBlank()) "N/A" else (prices.usd_foil!!))
@@ -93,7 +93,7 @@ class MainActivity : AppCompatActivity() {
             createNotification("${card.card_name} Moved to Category ${CollectionDBHelper.cardGroup(newPrice).second} from ${CollectionDBHelper.cardGroup(oldPrice).second}")
         }
         collectionTableHelper.updatePrice(card, prices)
-        collectionTableHelper.close()
+        collectionTableHelper.close()*/
     }
 
     private fun createNotification(message: String) {

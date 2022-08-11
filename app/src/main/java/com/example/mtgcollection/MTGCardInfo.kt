@@ -49,7 +49,7 @@ data class MTGCardInfo(var id : String, var card_name : String, var set : String
     }
 }
 
-data class Prices(var usd : String? = null, var usd_foil : String? = null, var eur : String? = null, var eur_foil : String? = null, var tix : String? = null, var tix_foil : String? = null) {
+data class Prices(var usd : String? = null, var usd_foil : String? = null, var eur : String? = null, var eur_foil : String? = null, var tix : String? = null, var tix_foil : String? = null, var lastUpdated : String = "") {
 
     constructor(jsonObject: JSONObject) : this(null, null, null, null, null, null) {
         if (jsonObject.has("usd")) {
