@@ -164,13 +164,14 @@ class CardSearchFragment : Fragment() {
 
             val locationArray = collectionTableHelper.getAllBoxes()
             locationArray.add(0, LocationInfo(null, "No Box", null, null))
-            innerDialog.findViewById<Spinner>(R.id.popup_location_spinner).adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, locationArray)
+            val locationSpinner = innerDialog.findViewById<Spinner>(R.id.popup_location_spinner)
+            locationSpinner.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, locationArray)
 
             //set On Click Listener
             innerDialog.findViewById<Button>(R.id.popup_add_button).setOnClickListener {
                 cardInfo.isFoil = innerDialog.findViewById<SwitchCompat>(R.id.popup_foil_spinner).isChecked
                 val amountText = innerDialog.findViewById<EditText>(R.id.popup_amount_input).text.toString()
-                val locationInfo = innerDialog.findViewById<Spinner>(R.id.popup_location_spinner).selectedItem as LocationInfo
+                val locationInfo = locationSpinner.selectedItem as LocationInfo
                 if (amountText != "" && amountText != "0") {cardInfo.amount = amountText.toInt(); innerDialog.hide(); addCardToCollection(cardInfo, locationInfo.locationId); setDialogLocationsRecyclerView(dialog, cardInfo.id)}
                 else {Toast.makeText(context, "Need an amount", Toast.LENGTH_SHORT).show()}}
             innerDialog.window?.setLayout(((width/9)*8).toInt(), ((width/9)*8).toInt())
