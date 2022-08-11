@@ -259,9 +259,9 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         }
         val returnList = ArrayList<MTGCardInfo>()
 
-        val queryStringCards = "SELECT ${COLLECTION_TABLE}.$COLUMN_ID, $COLUMN_CARD_NAME, $COLUMN_CARD_SET, ${COLLECTION_TABLE}.$COLUMN_IS_FOIL, $COLUMN_RARITY, ${CARD_IN_LOCATION_TABLE}.$COLUMN_AMOUNT AS $COLUMN_AMOUNT," +
-                " $COLUMN_USD, $COLUMN_USD_FOIL, $COLUMN_EUR, $COLUMN_EUR_FOIL, $COLUMN_TIX, $COLUMN_TIX_FOIL, $COLUMN_PRICE_LAST_UPDATED" +
-                " FROM $COLLECTION_TABLE INNER JOIN $CARD_IN_LOCATION_TABLE ON ${COLLECTION_TABLE}.$COLUMN_ID = ${CARD_IN_LOCATION_TABLE}.$COLUMN_ID AND ${COLLECTION_TABLE}.$COLUMN_IS_FOIL = ${CARD_IN_LOCATION_TABLE}.$COLUMN_IS_FOIL" +
+        val queryStringCards = "SELECT ${COLLECTION_TABLE}.$COLUMN_ID, $COLUMN_CARD_NAME, $COLUMN_CARD_SET, $COLUMN_RARITY," +
+                " $COLUMN_USD, $COLUMN_USD_FOIL, $COLUMN_EUR, $COLUMN_EUR_FOIL, $COLUMN_TIX, $COLUMN_TIX_FOIL, $COLUMN_PRICE_LAST_UPDATED, ${CARD_IN_LOCATION_TABLE}.$COLUMN_AMOUNT AS $COLUMN_AMOUNT" +
+                " FROM $COLLECTION_TABLE INNER JOIN $CARD_IN_LOCATION_TABLE ON ${COLLECTION_TABLE}.$COLUMN_ID = ${CARD_IN_LOCATION_TABLE}.$COLUMN_ID" +
                 " WHERE ${CARD_IN_LOCATION_TABLE}.$COLUMN_LOCATION_ID=$locationId" + getOrderingString(ordering)
 
         val cursor = sqLiteDatabase.rawQuery(queryStringCards, null)
@@ -269,7 +269,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         if (cursor.moveToFirst()) {
             var cardInfo : MTGCardInfo
             do {
-                cardInfo = cursorToCardInfo(cursor)!!
+                cardInfo = cursorToCardInfo(cursor, true)!!
                 returnList.add(cardInfo)
             }while (cursor.moveToNext())
         }
@@ -402,7 +402,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             cardInfo.prices.eur_foil = cursorColumnToString(cursor, 7)
             cardInfo.prices.tix = cursorColumnToString(cursor, 8)
             cardInfo.prices.tix_foil = cursorColumnToString(cursor, 9)
-            cardInfo.prices.lastUpdated = cursorColumnToString(cursor, 10)
+            cardInfo.prices.lastUpdated = cursor.getString(10)
 
             if (withAmount) {
                 cardInfo.amount = cursor.getInt(11)
