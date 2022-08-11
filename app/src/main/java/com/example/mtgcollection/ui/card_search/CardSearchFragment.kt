@@ -91,26 +91,42 @@ class CardSearchFragment : Fragment() {
         val cards = response.getJSONArray("data")
         for (i in 0 until cards.length())
         {
-            if (cards.getJSONObject(i).getString("name").lowercase().equals(binding.cardNameTextBox.text.toString().lowercase(), true)) {
-                val current = cards.getJSONObject(i)
-                cardArrayList.add(
-                    MTGCardInfo(
-                        current.getString("id"),
-                        current.getString("name"),
-                        current.getString("set"),
-                        current.getString("rarity"),
-                        1, Prices(current.getJSONObject("prices"))
-                    )
+            val current = cards.getJSONObject(i)
+            cardArrayList.add(
+                MTGCardInfo(
+                    current.getString("id"),
+                    current.getString("name"),
+                    current.getString("set"),
+                    current.getString("rarity"),
+                    1, Prices(current.getJSONObject("prices"))
                 )
-            }
+            )
         }
+        checkForExactName(cardArrayList, binding.cardNameTextBox.text.toString())
         if (cardArrayList.size != 0) {
             cardAdapter.emptyAdapter()
             cardAdapter.addArray(cardArrayList)
         } else {
             getAutocomplete()
         }
+    }
 
+    private fun checkForExactName(cardArrayList : ArrayList<MTGCardInfo>, searchedName : String){
+        var multipleNames = false
+        if (cardArrayList.size <= 1) return
+        for (i in 1 until cardArrayList.size) {
+            if (cardArrayList[i].card_name.lowercase() != cardArrayList[0].card_name.lowercase()) {
+                multipleNames = true
+                break
+            }
+        }
+        if (multipleNames) {
+            for (i in cardArrayList.size-1 downTo 0) {
+                if (cardArrayList[i].card_name.lowercase() != searchedName.lowercase()) {
+                    cardArrayList.removeAt(i)
+                }
+            }
+        }
     }
 
     private fun getAutocomplete () {
