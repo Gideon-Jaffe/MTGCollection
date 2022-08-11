@@ -160,25 +160,6 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         return update == 1
     }
 
-    //update price of card in database
-    fun updatePrice(card_info: MTGCardInfo, new_prices: Prices) : Boolean {
-        val contentValues = ContentValues()
-
-        contentValues.put(COLUMN_USD, new_prices.usd)
-        contentValues.put(COLUMN_USD_FOIL, new_prices.usd_foil)
-        contentValues.put(COLUMN_EUR, new_prices.eur)
-        contentValues.put(COLUMN_EUR_FOIL, new_prices.eur_foil)
-        contentValues.put(COLUMN_TIX, new_prices.tix)
-        contentValues.put(COLUMN_TIX_FOIL, new_prices.tix_foil)
-        contentValues.put(COLUMN_PRICE_LAST_UPDATED, SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(Calendar.getInstance().time))
-
-        val update = sqLiteDatabase.update(
-        COLLECTION_TABLE, contentValues, "$COLUMN_ID=? AND $COLUMN_IS_FOIL=?",
-            arrayOf(card_info.id, if (card_info.isFoil) "1" else "0"))
-
-        return update == 1
-    }
-
     //Remove a card from location and from collection
     fun removeOne(cardId: String, isCardFoil: Boolean, locationId: Int?) : Boolean{
         return updateAmountOfCardInLocation(cardId, isCardFoil, -1, locationId)
