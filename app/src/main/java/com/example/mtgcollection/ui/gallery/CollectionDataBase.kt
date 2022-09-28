@@ -233,7 +233,8 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
             val isoString = SimpleDateFormat("yyyy-MM-dd HH:mm:SS.SSS", Locale.US).format(startDate.time)
             "SELECT * FROM $COLLECTION_TABLE WHERE $COLUMN_PRICE_LAST_UPDATED < '$isoString'" + getOrderingString(ordering)
         } else {
-            "SELECT $COLLECTION_TABLE.*, SUM($CARD_IN_LOCATION_TABLE.$COLUMN_AMOUNT) " +
+            "SELECT $COLLECTION_TABLE.*, " +
+                    "SUM($CARD_IN_LOCATION_TABLE.$COLUMN_AMOUNT) AS Amount " +
                     "FROM $COLLECTION_TABLE INNER JOIN $CARD_IN_LOCATION_TABLE ON " +
                     "$COLLECTION_TABLE.$COLUMN_ID = $CARD_IN_LOCATION_TABLE.$COLUMN_ID " +
                     "GROUP BY $COLLECTION_TABLE.$COLUMN_ID" + getOrderingString(ordering)
@@ -244,7 +245,7 @@ class CollectionDBHelper (context: Context) : SQLiteOpenHelper(context, "MyColle
         if (cursor.moveToFirst()) {
             var cardInfo : MTGCardInfo
             do {
-                cardInfo = cursorToCardInfo(cursor, true)!!
+                cardInfo = cursorToCardInfo(cursor, priceUpdatedDaysAgo <= 0)!!
                 returnList.add(cardInfo)
             }while (cursor.moveToNext())
         }
